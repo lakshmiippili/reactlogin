@@ -1,57 +1,98 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useReducer } from "react";
 
 import Card from "../UI/Card/Card";
 import classes from "./Login.module.css";
 import Button from "../UI/Button/Button";
 
+const emailReducer = (state, action) => {
+  if (action.type === "user_input") {
+    return { value: action.val, isValid: action.val.includes("@") };
+  }
+  if (action.type === "input_blur") {
+    return { value: state.value, isValid: state.value.includes("@") };
+  }
+  return { value: "", isValid: false };
+};
+const passwordReducer = (state, action) => {
+  if (action.type === "user_input") {
+    return { value: action.val, isValid: action.val.trim().length > 6 };
+  }
+  if (action.type === "input_blur") {
+    return { value: state.value, isValid: state.value.trim().length > 6 };
+  }
+  return { value: "", isValid: false };
+};
+const collegeReducer = (state, action) => {
+  if (action.type === "user_input") {
+    return { value: action.val, isValid: action.val.trim().length > 0 };
+  }
+  if (action.type === "input_blur") {
+    return { value: state.value, isValid: state.value.trim().length > 0 };
+  }
+  return { value: "", isValid: false };
+};
 const Login = (props) => {
-  const [enteredEmail, setEnteredEmail] = useState("");
-  const [emailIsValid, setEmailIsValid] = useState();
-  const [enteredPassword, setEnteredPassword] = useState("");
-  const [passwordIsValid, setPasswordIsValid] = useState();
-  const [enteredCollege, setEnteredCollege] = useState("")
-  const [collegeIsValid, setCollegeIsValid] = useState()
+  // const [enteredEmail, setEnteredEmail] = useState("");
+  // const [emailIsValid, setEmailIsValid] = useState();
+  const [emailState, dispatchEmail] = useReducer(emailReducer, {
+    value: "",
+    isValid: undefined,
+  });
+  // const [enteredPassword, setEnteredPassword] = useState("");
+  // const [passwordIsValid, setPasswordIsValid] = useState();
+  const [passwordState, dispatchPassword] = useReducer(passwordReducer, {
+    value: "",
+    isValid: undefined,
+  });
+  // const [enteredCollege, setEnteredCollege] = useState("");
+  // const [collegeIsValid, setCollegeIsValid] = useState();
+  const [collegeState, dispatchCollege] = useReducer(collegeReducer, {
+    value: "",
+    isValid: undefined,
+  });
   const [formIsValid, setFormIsValid] = useState(false);
 
   useEffect(() => {
     const identifier = setTimeout(() => {
       setFormIsValid(
-        enteredEmail.includes("@") && enteredPassword.trim().length > 6 && enteredCollege.trim().length >0
+        emailState.isValid &&
+          passwordState.isValid &&
+          collegeState.isValid
       );
     }, 500);
 
     return () => {
       clearTimeout(identifier);
     };
-  }, [enteredEmail, enteredPassword, enteredCollege]); //dependencies
+  }, [emailState, passwordState, collegeState]); //dependencies
 
   const emailChangeHandler = (event) => {
-    setEnteredEmail(event.target.value);
+    dispatchEmail({ type: "user_input", val: event.target.value });
   };
 
-  const collegeChangeHandler = (e) =>{
-    setEnteredCollege(e.target.value)
-  }
+  const collegeChangeHandler = (e) => {
+    dispatchCollege({ type: "user_input", val: e.target.value });
+  };
 
   const passwordChangeHandler = (event) => {
-    setEnteredPassword(event.target.value);
+    dispatchPassword({ type: "user_input", val: event.target.value });
   };
 
   const validateEmailHandler = () => {
-    setEmailIsValid(enteredEmail.includes("@"));
+    dispatchEmail({ type: "input_blur" });
   };
 
-  const validateCollegeHandler = ()=>{
-    setCollegeIsValid(enteredCollege.trim().length>0)
-  }
+  const validateCollegeHandler = () => {
+    dispatchCollege({ type: "input_blur" });
+  };
 
   const validatePasswordHandler = () => {
-    setPasswordIsValid(enteredPassword.trim().length > 6);
+    dispatchPassword({ type: "input_blur" });
   };
 
   const submitHandler = (event) => {
     event.preventDefault();
-    props.onLogin(enteredEmail, enteredPassword, enteredCollege);
+    props.onLogin(emailState.value, passwordState.value, collegeState);
   };
 
   return (
@@ -59,42 +100,42 @@ const Login = (props) => {
       <form onSubmit={submitHandler}>
         <div
           className={`${classes.control} ${
-            emailIsValid === false ? classes.invalid : ""
+            emailState.isValid === false ? classes.invalid : ""
           }`}
         >
           <label htmlFor="email">E-Mail</label>
           <input
             type="email"
             id="email"
-            value={enteredEmail}
+            value={emailState.value}
             onChange={emailChangeHandler}
             onBlur={validateEmailHandler}
           />
         </div>
         <div
           className={`${classes.control} ${
-            passwordIsValid === false ? classes.invalid : ""
+            passwordState.isValid === false ? classes.invalid : ""
           }`}
         >
           <label htmlFor="password">Password</label>
           <input
             type="password"
             id="password"
-            value={enteredPassword}
+            value={passwordState.value}
             onChange={passwordChangeHandler}
             onBlur={validatePasswordHandler}
           />
-          </div>
-          <div
+        </div>
+        <div
           className={`${classes.control} ${
-            collegeIsValid === false ? classes.invalid : ""
+            collegeState.isValid === false ? classes.invalid : ""
           }`}
         >
           <label htmlFor="college">College</label>
           <input
             type="text"
             id="college"
-            value={enteredCollege}
+            value={collegeState.value}
             onChange={collegeChangeHandler}
             onBlur={validateCollegeHandler}
           />
